@@ -248,7 +248,7 @@ body.intro-done .intro3d{
   .intro3d{display:none}
 }
 
-/* -------- Embedded profile builder (3d.html) -------- */
+/* -------- Embedded profile builder (index.html) -------- */
 .demoWide{
   /* Wider than the default --max (1220px) so the embedded builder can show 3 columns */
   --max: 1560px;
