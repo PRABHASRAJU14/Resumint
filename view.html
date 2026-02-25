@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ResuMint AI — Shared Profile</title>
+    <link rel="stylesheet" href="./land.css">
+    <link rel="stylesheet" href="./profile.css">
+    <style>
+        .view-only {
+            padding-top: 40px;
+        }
+
+        .badge {
+            background: var(--grad);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 99px;
+            font-size: 12px;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+    </style>
+</head>
+
+<body class="view-only">
+    <div class="container">
+        <div class="badge">Verified Shared Profile</div>
+        <div id="loading">Loading profile...</div>
+        <article id="pvProfile" class="resume"
+            style="display:none; transform: scale(0.9); transform-origin: top center; margin: 0 auto; box-shadow: 0 40px 100px rgba(0,0,0,0.1);">
+            <!-- Rendered same as profile.js preview -->
+        </article>
+    </div>
+
+    <script type="module">
+        import { db, doc, getDoc } from "./firebase-config.js";
+
+        async function loadProfile() {
+            const params = new URLSearchParams(window.location.search);
+            const uid = params.get("id");
+            if (!uid) {
+                document.getElementById('loading').textContent = "No profile ID found.";
+                return;
+            }
+
+            try {
+                const docRef = doc(db, "profiles", uid);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const state = docSnap.data();
+                    renderPublic(state);
+                } else {
+                    document.getElementById('loading').textContent = "Profile not found.";
+                }
+            } catch (e) {
+                console.error(e);
+                document.getElementById('loading').textContent = "Error loading profile.";
+            }
+        }
+
+        function renderPublic(state) {
+            document.getElementById('loading').style.display = "none";
+            const wrap = document.getElementById('pvProfile');
+            wrap.style.display = "block";
+
+            // Minimal render logic (similar to profile.js renderPreview but view-only)
+            wrap.innerHTML = `
+                <div class="resume__header">
+                    <h1 class="resume__name">${state.fullName || "Unnamed User"}</h1>
+                    <div class="resume__role">${state.targetRole || ""}</div>
+                    <div class="resume__contact">
+                        ${state.email ? `<span>${state.email}</span>` : ""}
+                        ${state.location ? `<span>${state.location}</span>` : ""}
+                        ${state.linkedin ? `<span>LinkedIn</span>` : ""}
+                    </div>
+                </div>
+                <div class="resume__summary">${state.summary || ""}</div>
+                
+                <section class="resume__sec">
+                    <div class="resume__h">Projects</div>
+                    <div class="resume__list">
+                        ${(state.projects || []).map(p => `
+                            <div class="item">
+                                <div class="item__top">
+                                    <div class="item__name">${p.name}</div>
+                                    ${p.link ? `<div class="item__org">${p.link}</div>` : ""}
+                                </div>
+                                <div class="item__tech">${p.tech}</div>
+                                <ul class="bullets">
+                                    ${(p.notes || "").split('\n').filter(l => l.trim()).map(l => `<li>${l}</li>`).join('')}
+                                </ul>
+                            </div>
+                        `).join('')}
+                    </div>
+                </section>
+            `;
+        }
+
+        loadProfile();
+    </script>
+</body>
+
+</html>
